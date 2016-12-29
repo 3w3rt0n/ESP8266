@@ -1,0 +1,82 @@
+#include <ESP8266WiFi.h>
+
+WiFiServer server(80); //Iniciar o servidor na porta 80
+
+IPAddress HTTPS_ServerIP;  //Variável para guarda o endereço IP do ESP
+
+void setup(){
+
+  WiFi.mode(WIFI_AP); //Habilitar modo AP
+  WiFi.softAP("IoT-ESP8266", "12345678"); //Configurar o SSID e a senha
+
+  server.begin(); //Iniciar a porta serial
+  Serial.begin(115200); //Configurar baud da porta serial
+  
+  HTTPS_ServerIP = WiFi.softAPIP(); //Pegar o endereõ IP
+  Serial.print("Servidor de IP: ");
+  Serial.println(HTTPS_ServerIP);
+
+  pinMode(2, OUTPUT); //GPIO 2
+  digitalWrite(2, LOW);
+
+  pinMode(12, OUTPUT); //GPIO 12
+  digitalWrite(2, LOW);
+
+  pinMode(13, OUTPUT); //GPIO13
+  digitalWrite(13, LOW);
+  
+}
+
+void loop() {
+
+   WiFiClient client = server.available();
+
+   if(!client){
+      return;
+   }
+
+   Serial.println("Cliente conectado!");
+   
+  
+   String request = client.readStringUntil('\r');
+
+   Serial.println(request);
+
+       
+   String resp = "HTTP/1.1 200 OK\r\n";
+   resp += "Content-Type: text/html\r\n\r\n";
+   resp += "<!DOCTYPR HTML>\r\n<html>\r\n";
+   resp += "<head><title>IoT - ESP8266</title></head>";
+   resp += "<body><h1>IoT - ESP8266</h1><p>IP: ";
+   resp += HTTPS_ServerIP.toString();
+   
+   if(request.indexOf("/OFF1") != -1){
+      digitalWrite(2, HIGH);
+   }else if(request.indexOf("/ON1") != -1){
+      digitalWrite(2,LOW);   
+   }else if(request.indexOf("/OFF2") != -1){
+      digitalWrite(12,LOW);     
+   }else if(request.indexOf("/ON2") != -1){
+      digitalWrite(12,HIGH);   
+   }else if(request.indexOf("/OFF3") != -1){
+      digitalWrite(13,LOW);   
+   }else if(request.indexOf("/ON3") != -1){
+      digitalWrite(13,HIGH);   
+   }
+
+             
+      resp += "</p><p>LED1 - OFF</p><br><input type=\"button\" name=\"b1\" value=\"Desligar LED\" onclick=\"location.href='/OFF1'\">";   
+      resp += "</p><p>LED1 - ON</p><br><input type=\"button\" name=\"b1\" value=\"Ligar LED\" onclick=\"location.href='/ON1'\">";
+      resp += "</p><p>LED2 - OFF</p><br><input type=\"button\" name=\"b2\" value=\"Desligar LED\" onclick=\"location.href='/OFF2'\">";       
+      resp += "</p><p>LED2 - ON</p><br><input type=\"button\" name=\"b1\" value=\"Ligar LED\" onclick=\"location.href='/ON2'\">"; 
+      resp += "</p><p>LED3 - OFF</p><br><input type=\"button\" name=\"b3\" value=\"Desligar LED\" onclick=\"location.href='/OFF3'\">";       
+      resp += "</p><p>LED3 - ON</p><br><input type=\"button\" name=\"b1\" value=\"Ligar LED\" onclick=\"location.href='/ON3'\">";   
+
+   
+   resp += "</body></html>\n";
+
+   client.flush();
+   client.print(resp);
+   delay(1);
+   Serial.println("Cliente desconectado");
+}
