@@ -1,0 +1,63 @@
+#include <ESP8266WiFi.h>
+
+WiFiServer server(80);
+
+IPAddress HTTPS_ServerIP;
+
+void setup(){
+
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP("IoT-ESP8266", "12345678");
+
+  server.begin();
+
+  Serial.begin(115200);
+  HTTPS_ServerIP = WiFi.softAPIP();
+  Serial.print("Servidor de IP: ");
+  Serial.println(HTTPS_ServerIP);
+
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
+  
+}
+
+void loop() {
+
+   WiFiClient client = server.available();
+
+   if(!client){
+      return;
+   }
+
+   Serial.println("Cliente conectado!");
+   
+  
+   String request = client.readStringUntil('\r');
+
+   Serial.println(request);
+
+       
+   String resp = "HTTP/1.1 200 OK\r\n";
+   resp += "Content-Type: text/html\r\n\r\n";
+   resp += "<!DOCTYPR HTML>\r\n<html>\r\n";
+   resp += "<head><title>IoT - ESP8266</title></head>";
+   resp += "<body><h1>IoT - ESP8266</h1><p>IP: ";
+   resp += HTTPS_ServerIP.toString();
+   
+   if(request.indexOf("/OFF") != -1){
+      digitalWrite(2, HIGH);
+      resp += "</p><p>LED - OFF</p><br><input type=\"button\" name=\"b1\" value=\"Ligar LED\" onclick=\"location.href='/ON'\">";
+   }else if(request.indexOf("/ON") != -1){
+      digitalWrite(2,LOW);   
+      resp += "</p><p>LED - ON</p><br><input type=\"button\" name=\"b1\" value=\"Desligar LED\" onclick=\"location.href='/OFF'\">";   
+   }else{
+      resp += "</p><p>LED - OFF</p><br><input type=\"button\" name=\"b1\" value=\"Ligar LED\" onclick=\"location.href='/ON'\">";    
+   }
+   
+   resp += "</body></html>\n";
+
+   client.flush();
+   client.print(resp);
+   delay(1);
+   Serial.println("Cliente desconectado");
+}
