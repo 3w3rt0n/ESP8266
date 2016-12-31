@@ -1,0 +1,20 @@
+var http = require("http");
+
+function servidor(request, response){
+  response.write("<html><body>");
+  
+  if(request.url == "/hello"){
+    responso.write("<b>Seja bem vindo!</b> para teste do ESP8266.");
+  } else if(request.url == "/goodbye"){
+    response.write("<b>Por favor</b> volte em breve");
+  } else {
+    response.write("Desculpe... requisição invalida");
+  }
+  
+  response.end("</body></html>");
+
+}
+
+var httpSvr = http.createServer(servidor(requeste, response));
+
+httpSrv.listen(90);
